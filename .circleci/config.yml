@@ -1,0 +1,30 @@
+version: 2.1
+orbs:
+  elixir: membraneframework/elixir@1.4
+
+workflows:
+  precompile:
+    jobs:
+      - elixir/precompile_for_macos_intel: &parameters
+          package-name: sdl2
+          expected-version: << pipeline.git.tag >>
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /v.*/
+      - elixir/precompile_for_macos_arm:
+          <<: *parameters
+      - elixir/precompile_for_linux:
+          <<: *parameters
+      - elixir/publish_precompiled:
+          requires:
+            - elixir/precompile_for_macos_arm
+            - elixir/precompile_for_macos_intel
+            - elixir/precompile_for_linux
+          version: << pipeline.git.tag >>
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /v.*/
